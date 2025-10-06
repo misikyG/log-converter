@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7755聊天紀錄→ST聊天紀錄 v3.1</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+
+        /* --- THEME CONFIGURATION ---
+         * 在這裡修改顏色、字體等，即可輕鬆自訂整個工具的外觀。
+        ------------------------------------ */
+        :root {
+            /* Font */
+            --font-family: 'Noto Sans TC', sans-serif;
+            --bg-primary: #dee2d8;
+            --bg-secondary: #e3e9df;
+            --text-primary: #195458;
+            --text-secondary: #57776c;
+            --accent-primary: rgba(44, 114, 59, 0.5);
+            --accent-secondary: rgba(44, 114, 59, 0.5);
+            --color-success: #73a81e;
+            --color-warning: #ca3e25;
+            --color-white: #47805b;
+            --color-black: #22302f;
+
+            /* Colors (RGB values for rgba()) */
+            --accent-primary-rgb: 138, 43, 226;
+            --white-rgb: 255, 255, 255;
+            --black-rgb: 0, 0, 0;
+
+            /* Gradients */
+            --bg-gradient: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            --accent-gradient: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+
+            /* UI Elements */
+            --panel-bg: rgba(var(--white-rgb), 0.1);
+            --panel-border: rgba(var(--white-rgb), 0.2);
+            --input-bg: rgba(var(--black-rgb), 0.25);
+            --input-bg-readonly: rgba(var(--black-rgb), 0.35);
+            --shadow-color: rgba(var(--black-rgb), 0.3);
+
+            /* Sizing & Radius */
+            --border-radius-lg: 16px;
+            --border-radius-md: 8px;
+            --border-radius-sm: 6px;
+        }
+
+        /* ------------------------------------ */
+
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-primary);
+            background-image: var(--bg-gradient),
+                /* 彩粒噪點SVG背景, 顏色與主題匹配 */
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cdefs%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' stitchTiles='stitch'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='100' height='100' fill='%231a1a2e'/%3E%3Cg filter='url(%23n)'%3E%3Crect width='100' height='100' fill-opacity='0.05' fill='%238a2be2'/%3E%3Crect width='100' height='100' fill-opacity='0.05' fill='%234a00e0'/%3E%3Crect width='100' height='100' fill-opacity='0.05' fill='%23ffffff'/%3E%3C/g%3E%3C/svg%3E");
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--border-radius-lg);
+            box-shadow: 0 8px 32px 0 var(--shadow-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 30px 35px;
+            width: 100%;
+            max-width: 750px;
+            transition: all 0.3s ease;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--color-white);
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(var(--black-rgb), 0.2);
+        }
+
+        .step {
+            margin-bottom: 25px;
+            border: none;
+            padding: 0;
+        }
+
+        .step-title {
+            font-weight: 500;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            color: var(--color-white);
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 20px;
+            border: 2px dashed var(--panel-border);
+            border-radius: var(--border-radius-md);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-label:hover {
+            background-color: rgba(var(--white-rgb), 0.1);
+            border-color: var(--color-white);
+        }
+
+        .name-mapping-header,
+        .name-mapping-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .name-mapping-header {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            padding: 0 5px;
+        }
+
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            box-sizing: border-box;
+            background-color: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--border-radius-sm);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.3);
+        }
+
+        input[readonly] {
+            background-color: var(--input-bg-readonly);
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23c0c0c0%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22/%3E%3C/svg%3E');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 8px;
+        }
+
+        #nameMappingArea {
+            min-height: 40px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .target-name-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .target-name-inputs label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .cleanup-options {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .checkbox-container input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .checkmark {
+            position: relative;
+            height: 20px;
+            width: 20px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-container input:checked~.checkmark {
+            background-color: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid var(--color-white);
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+
+        .checkbox-container input:checked~.checkmark:after {
+            display: block;
+        }
+
+        .checkbox-container span {
+            margin-left: 10px;
+        }
+
+        .warning {
+            font-size: 0.85em;
+            color: var(--color-warning);
+            margin-top: 10px;
+        }
+
+        #convertButton {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--color-white);
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(var(--black-rgb), 0.2);
+            letter-spacing: 1px;
+        }
+
+        #convertButton:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(var(--black-rgb), 0.3);
+        }
+
+        #convertButton:disabled {
+            background: var(--input-bg);
+            cursor: not-allowed;
+            color: var(--text-secondary);
+        }
+
+        #status {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 500;
+            height: 20px;
+            transition: color 0.3s ease;
+        }
+
+        #status.initial {
+            color: var(--text-secondary);
+        }
+
+        #status.info {
+            color: var(--text-primary);
+        }
+
+        #status.success {
+            color: var(--color-success);
+        }
+
+        #status.warning {
+            color: var(--color-warning);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>7755 → SillyTavern</h1>
+
+        <div class="step">
+            <div class="step-title">1. 上傳聊天記錄</div>
+            <label for="fileInput" class="file-upload-label" id="fileUploadLabel">點擊或拖曳 .txt 檔案至此</label>
+            <input type="file" id="fileInput" accept=".txt">
+        </div>
+
+        <div class="step">
+            <div class="step-title">2. 設定名稱對應</div>
+            <div class="target-name-inputs">
+                <div><label for="targetCharName">最終角色名稱（應用於ST）</label><input type="text" id="targetCharName"
+                        placeholder="ST中的角色名"></div>
+                <div><label for="targetUserName">最終你的名稱（應用於ST）</label><input type="text" id="targetUserName"
+                        placeholder="ST中的你的名稱"></div>
+            </div>
+            <div class="name-mapping-header"><span>偵測到的名稱</span><span>指定身份</span></div>
+            <div id="nameMappingArea"></div>
+        </div>
+
+        <div class="step">
+            <div class="step-title">3. 清理訊息格式 (可選)</div>
+            <div class="cleanup-options">
+                <label class="checkbox-container"><input type="checkbox" id="removeStars"><span
+                        class="checkmark"></span><span>移除星號 *...*</span></label>
+                <label class="checkbox-container"><input type="checkbox" id="removeBrackets"><span
+                        class="checkmark"></span><span>移除括號 (...)</span></label>
+            </div>
+        </div>
+
+        <button id="convertButton" disabled>轉換並下載</button>
+        <p id="status" class="initial">請先選擇一個檔案</p>
+    </div>
+
+    <script>
+        let fileContent = '';
+        let sourceFileName = 'chat_export.txt';
+        const fileInputElement = document.getElementById('fileInput');
+        const fileUploadLabel = document.getElementById('fileUploadLabel');
+        const targetCharNameElement = document.getElementById('targetCharName');
+        const targetUserNameElement = document.getElementById('targetUserName');
+        const nameMappingArea = document.getElementById('nameMappingArea');
+        const convertButtonElement = document.getElementById('convertButton');
+        const statusElement = document.getElementById('status');
+        const removeStarsCheckbox = document.getElementById('removeStars');
+        const removeBracketsCheckbox = document.getElementById('removeBrackets');
+
+        fileInputElement.addEventListener('change', (e) => handleFileSelect(e.target.files[0]));
+
+        const dropArea = document.querySelector('.container');
+        dropArea.addEventListener('dragover', (e) => { e.preventDefault(); fileUploadLabel.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'; });
+        dropArea.addEventListener('dragleave', (e) => { e.preventDefault(); fileUploadLabel.style.backgroundColor = 'transparent'; });
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadLabel.style.backgroundColor = 'transparent';
+            if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+        });
+
+        function setStatus(message, type = 'info') {
+            statusElement.textContent = message;
+            statusElement.className = type;
+        }
+
+        function handleFileSelect(file) {
+            if (!file) return;
+            sourceFileName = file.name;
+            const reader = new FileReader();
+            reader.onload = e => {
+                fileContent = e.target.result;
+                fileUploadLabel.textContent = `已選擇檔案: ${sourceFileName}`;
+                setStatus(`檔案已載入。請設定名稱對應。`, 'info');
+                convertButtonElement.disabled = false;
+                detectAndDisplayNames(fileContent);
+            };
+            reader.onerror = () => { setStatus("讀取檔案失敗！", 'warning'); };
+            reader.readAsText(file);
+        }
+
+        function detectAndDisplayNames(content) {
+            nameMappingArea.innerHTML = '';
+            let headerCharName = null;
+
+            const lines = content.split('\n').slice(0, 5);
+            const charPattern1 = /^Character: (.*)/i;
+            const charPattern2 = /^(.*?) - (.*?)$/;
+            for (const line of lines) {
+                const trimmedLine = line.trim();
+                let match = trimmedLine.match(charPattern1);
+                if (match) { headerCharName = match[1].trim(); break; }
+                if (!trimmedLine.startsWith("=")) { match = trimmedLine.match(charPattern2); if (match) { headerCharName = match[1].trim(); break; } }
+            }
+
+            const chatPattern = /\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\] ([^:]+):/g;
+            const speakers = new Set(Array.from(content.matchAll(chatPattern), m => m[1].trim()).filter(name => name !== 'Environment (system)'));
+            const speakerList = Array.from(speakers);
+
+            if (speakerList.length === 0) {
+                setStatus("偵測失敗：未找到任何對話。", 'warning');
+                convertButtonElement.disabled = true; return;
+            }
+
+            targetCharNameElement.value = headerCharName || speakerList[0] || '';
+            const defaultUser = speakerList.find(s => s !== targetCharNameElement.value) || (speakerList.length > 1 ? speakerList[1] : '');
+            targetUserNameElement.value = defaultUser;
+
+            speakerList.forEach(name => {
+                const row = document.createElement('div'); row.className = 'name-mapping-row';
+                const nameLabel = document.createElement('input');
+                nameLabel.type = 'text'; nameLabel.value = name; nameLabel.readOnly = true; nameLabel.dataset.sourceName = name;
+                const roleSelect = document.createElement('select');
+                ['角色', '你 (User)', '忽略'].forEach(text => {
+                    const option = document.createElement('option');
+                    option.value = text === '角色' ? 'character' : text === '你 (User)' ? 'user' : 'ignore';
+                    option.textContent = text;
+                    roleSelect.appendChild(option);
+                });
+                if (name === targetCharNameElement.value) roleSelect.value = 'character';
+                else if (name === defaultUser) roleSelect.value = 'user';
+                else roleSelect.value = 'ignore';
+                row.appendChild(nameLabel); row.appendChild(roleSelect);
+                nameMappingArea.appendChild(row);
+            });
+        }
+
+        convertButtonElement.addEventListener('click', () => {
+            const targetChar = targetCharNameElement.value.trim();
+            const targetUser = targetUserNameElement.value.trim();
+            const nameMap = new Map();
+            const mappingRows = nameMappingArea.querySelectorAll('.name-mapping-row');
+            if (mappingRows.length === 0) { alert("錯誤：沒有偵測到任何發言者名稱。"); return; }
+            let hasChar = false, hasUser = false;
+            mappingRows.forEach(row => {
+                const sourceName = row.querySelector('input').dataset.sourceName;
+                const role = row.querySelector('select').value;
+                if (role !== 'ignore') nameMap.set(sourceName, role);
+                if (role === 'character') hasChar = true;
+                if (role === 'user') hasUser = true;
+            });
+
+            if (!fileContent || !targetChar || !targetUser || !hasChar || !hasUser) {
+                alert("錯誤：請確保已指定至少一個『角色』和一個『你 (User)』的身份，並填寫最終名稱。"); return;
+            }
+
+            setStatus("轉換中...", 'info');
+            try {
+                const outputLines = [];
+                const createDate = new Date().toISOString().slice(0, 19).replace('T', '@').replace(/:/g, 'm', 1).replace(/:/g, 's') + 's';
+                outputLines.push(JSON.stringify({
+                    user_name: targetUser, character_name: targetChar, create_date: createDate,
+                    chat_metadata: { integrity: "generic-hash", chat_id_hash: Date.now(), persona: "user-default.png" }
+                }));
+
+                const messagePattern = /\[([\d\- :]+)\] (.*?): (.*?)(?=\n\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]|$)/gs;
+                for (const match of fileContent.matchAll(messagePattern)) {
+                    let [, timestampStr, speaker, messageText] = match.map(s => s.trim());
+                    const sendDate = new Date(timestampStr.replace(/-/g, '/')).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }).replace(' at ', ' ').toLowerCase().replace(",", "");
+                    if (removeStarsCheckbox.checked) messageText = messageText.replace(/\*(.*?)\*/g, '$1');
+                    if (removeBracketsCheckbox.checked) messageText = messageText.replace(/[\(（](.*?)[\)）]/g, '$1');
+                    let role = speaker === 'Environment (system)' ? 'character' : nameMap.get(speaker);
+                    if (!role) continue;
+                    outputLines.push(JSON.stringify({
+                        name: role === 'user' ? targetUser : targetChar, is_user: role === 'user', is_system: false,
+                        send_date: sendDate, mes: messageText, extra: {}
+                    }));
+                }
+                downloadFile(outputLines.join('\n'), sourceFileName.replace(/\.txt$/, '.jsonl'));
+                setStatus("轉換成功！已觸發下載。", 'success');
+            } catch (e) {
+                setStatus(`轉換失敗: ${e.message}`, 'warning'); console.error(e);
+            }
+        });
+
+        function downloadFile(content, filename) {
+            const blob = new Blob([content], { type: 'application/jsonl' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+
+</html>

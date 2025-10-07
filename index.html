@@ -389,7 +389,7 @@
 
         function handleFileSelect(file) {
             if (!file) return;
-            
+
             // --- MODIFIED --- Add a file size check (e.g., 100 MB limit) to prevent browser crash
             const MAX_FILE_SIZE_MB = 100;
             if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
@@ -489,8 +489,11 @@
                 for (const match of fileContent.matchAll(messagePattern)) {
                     let [, timestampStr, speaker, messageText] = match.map(s => s.trim());
                     const sendDate = new Date(timestampStr.replace(/-/g, '/')).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }).replace(' at ', ' ').toLowerCase().replace(",", "");
-                    if (removeStarsCheckbox.checked) messageText = messageText.replace(/\*(.*?)\*/g, '$1');
-                    if (removeBracketsCheckbox.checked) messageText = messageText.replace(/[\(（](.*?)[\)）]/g, '$1');
+
+                    // --- MODIFIED --- Changed from * (zero or more) to + (one or more)
+                    if (removeStarsCheckbox.checked) messageText = messageText.replace(/\*(.+?)\*/g, '$1');
+                    if (removeBracketsCheckbox.checked) messageText = messageText.replace(/[\(（](.+?)[\)）]/g, '$1');
+
                     let role = speaker === 'Environment (system)' ? 'character' : nameMap.get(speaker);
                     if (!role) continue;
 

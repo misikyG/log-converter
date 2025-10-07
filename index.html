@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7755聊天紀錄→ST聊天紀錄 v3.1</title>
+    <title>7755聊天紀錄→ST聊天紀錄 v3.2</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 
@@ -303,6 +303,14 @@
         #status.warning {
             color: var(--color-warning);
         }
+
+        /* --- NEW --- Privacy notice styling */
+        .privacy-notice {
+            text-align: center;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 15px;
+        }
     </style>
 </head>
 
@@ -341,6 +349,8 @@
 
         <button id="convertButton" disabled>轉換並下載</button>
         <p id="status" class="initial">請先選擇一個檔案</p>
+        <!-- --- NEW --- Privacy notice element -->
+        <p class="privacy-notice">🔒 本工具僅在您的瀏覽器中處理資料，您的聊天紀錄不會被上傳到任何伺服器。</p>
     </div>
 
     <script>
@@ -372,8 +382,22 @@
             statusElement.className = type;
         }
 
+        // --- NEW --- Basic HTML sanitization function to prevent XSS
+        function sanitizeHTML(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
         function handleFileSelect(file) {
             if (!file) return;
+            
+            // --- MODIFIED --- Add a file size check (e.g., 100 MB limit) to prevent browser crash
+            const MAX_FILE_SIZE_MB = 100;
+            if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                setStatus(`檔案大小超過 ${MAX_FILE_SIZE_MB}MB 限制，處理可能導致瀏覽器崩潰。`, 'warning');
+                fileInputElement.value = ''; // Clear the file input
+                return;
+            }
+
             sourceFileName = file.name;
             const reader = new FileReader();
             reader.onload = e => {
@@ -469,9 +493,13 @@
                     if (removeBracketsCheckbox.checked) messageText = messageText.replace(/[\(（](.*?)[\)）]/g, '$1');
                     let role = speaker === 'Environment (system)' ? 'character' : nameMap.get(speaker);
                     if (!role) continue;
+
+                    // --- MODIFIED --- Sanitize message content before putting it in the JSON
+                    const sanitizedMessage = sanitizeHTML(messageText);
+
                     outputLines.push(JSON.stringify({
                         name: role === 'user' ? targetUser : targetChar, is_user: role === 'user', is_system: false,
-                        send_date: sendDate, mes: messageText, extra: {}
+                        send_date: sendDate, mes: sanitizedMessage, extra: {}
                     }));
                 }
                 downloadFile(outputLines.join('\n'), sourceFileName.replace(/\.txt$/, '.jsonl'));

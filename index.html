@@ -320,10 +320,10 @@
         <div class="step">
             <div class="step-title">2. 設定名稱對應</div>
             <div class="target-name-inputs">
-                <div><label for="targetCharName">最終角色名稱（應用於ST）</label><input type="text" id="targetCharName"
+                <div><label for="targetCharName">最終角色名稱</label><input type="text" id="targetCharName"
                         placeholder="ST中的角色名"></div>
-                <div><label for="targetUserName">最終你的名稱（應用於ST）</label><input type="text" id="targetUserName"
-                        placeholder="ST中的你的名稱"></div>
+                <div><label for="targetUserName">最終玩家名稱</label><input type="text" id="targetUserName"
+                        placeholder="ST中的玩家的名稱"></div>
             </div>
             <div class="name-mapping-header"><span>偵測到的名稱</span><span>指定身份</span></div>
             <div id="nameMappingArea"></div>
@@ -419,9 +419,9 @@
                 const nameLabel = document.createElement('input');
                 nameLabel.type = 'text'; nameLabel.value = name; nameLabel.readOnly = true; nameLabel.dataset.sourceName = name;
                 const roleSelect = document.createElement('select');
-                ['角色', '你 (User)', '忽略'].forEach(text => {
+                ['角色', '玩家 (User)', '忽略'].forEach(text => {
                     const option = document.createElement('option');
-                    option.value = text === '角色' ? 'character' : text === '你 (User)' ? 'user' : 'ignore';
+                    option.value = text === '角色' ? 'character' : text === '玩家 (User)' ? 'user' : 'ignore';
                     option.textContent = text;
                     roleSelect.appendChild(option);
                 });
@@ -449,7 +449,7 @@
             });
 
             if (!fileContent || !targetChar || !targetUser || !hasChar || !hasUser) {
-                alert("錯誤：請確保已指定至少一個『角色』和一個『你 (User)』的身份，並填寫最終名稱。"); return;
+                alert("錯誤：請確保已指定至少一個『角色』和一個『玩家 (User)』的身份，並填寫最終名稱。"); return;
             }
 
             setStatus("轉換中...", 'info');
